@@ -4,7 +4,7 @@ iOS templates for [Templetry](https://github.com/Templetry). One **parent repo**
 
 | Form | What it is | Status |
 |---|---|---|
-| [`swiftui-app/`](swiftui-app/) | SwiftUI app — XcodeGen project, `@Observable` view models, optional SwiftData and async/await networking, XCTest | 🚧 awaiting first green CI |
+| [`swiftui-app/`](swiftui-app/) | SwiftUI app — XcodeGen project, `@Observable` view models, optional SwiftData and async/await networking, XCTest | ✅ ready |
 
 ## Usage
 
