@@ -1,0 +1,67 @@
+name: Verify forms
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    # Weekly, so upstream drift surfaces here and not in a user project.
+    - cron: "0 6 * * 1"
+
+concurrency:
+  group: verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  swiftui-app:
+    name: swiftui-app (${{ matrix.name }})
+    # The only parent that needs macOS: an iOS build needs Xcode, which is
+    # also why this form declares no `verify` block (ADR-0004 verifies in a
+    # Linux container).
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: default, args: "" }
+          - { name: minimal, args: "--preset minimal" }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Templetry/.github/actions/setup-templetry@main
+      - name: Render
+        run: |
+          templetry render --template ./swiftui-app --out "$RUNNER_TEMP/out" \
+            --set "project_name=Verify App" --set "bundle_prefix=com.verify" ${{ matrix.args }}
+
+      - name: Generate the Xcode project
+        working-directory: ${{ runner.temp }}/out
+        run: |
+          brew install xcodegen
+          xcodegen generate
+
+      - name: Build app and tests
+        working-directory: ${{ runner.temp }}/out
+        run: |
+          xcodebuild build-for-testing \
+            -scheme VerifyApp \
+            -destination 'generic/platform=iOS Simulator' \
+            -quiet
+
+      - name: Run the test suite
+        working-directory: ${{ runner.temp }}/out
+        run: |
+          # Ask the runner which iPhone it has rather than pinning a model
+          # that ages out of the image — that is a yearly breakage otherwise.
+          device=$(xcrun simctl list devices available \
+            | grep -oE 'iPhone [^(]+' | head -1 | sed 's/[[:space:]]*$//')
+          if [ -z "$device" ]; then
+            echo "::error::no iPhone simulator available on this runner"
+            xcrun simctl list devices available
+            exit 1
+          fi
+          echo "running on: $device"
+          xcodebuild test-without-building \
+            -scheme VerifyApp \
+            -destination "platform=iOS Simulator,name=$device" \
+            -quiet

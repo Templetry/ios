@@ -1,0 +1,56 @@
+# XcodeGen spec. The .xcodeproj is generated from this, never committed:
+# a pbxproj is a merge-conflict machine, and this file is reviewable.
+#
+#   brew install xcodegen && xcodegen generate
+name: TemplateApp
+
+options:
+  bundleIdPrefix: com.template
+  deploymentTarget:
+    iOS: "17.0"
+  createIntermediateGroups: true
+
+settings:
+  base:
+    # Swift 5 language mode. Moving to 6 turns strict concurrency checking
+    # from warnings into errors — a deliberate migration, not a default.
+    SWIFT_VERSION: "5.0"
+    # No signing identity exists on CI, and a simulator build needs none.
+    CODE_SIGNING_ALLOWED: "NO"
+
+targets:
+  TemplateApp:
+    type: application
+    platform: iOS
+    # Sources are globbed from disk, so a feature that adds or removes files
+    # needs no change here — the project spec stays out of the way.
+    sources:
+      - path: Sources/TemplateApp
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.template.templateapp
+        GENERATE_INFOPLIST_FILE: "YES"
+        INFOPLIST_KEY_UILaunchScreen_Generation: "YES"
+        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: "YES"
+        TARGETED_DEVICE_FAMILY: "1,2"
+
+  TemplateAppTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: Tests/TemplateAppTests
+    dependencies:
+      - target: TemplateApp
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.template.templateapp.tests
+
+schemes:
+  TemplateApp:
+    build:
+      targets:
+        TemplateApp: all
+        TemplateAppTests: [test]
+    test:
+      targets:
+        - TemplateAppTests

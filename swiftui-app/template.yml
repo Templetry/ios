@@ -1,0 +1,56 @@
+schema_version: 1
+name: ios-swiftui-app
+description: SwiftUI iOS app — XcodeGen project, @Observable view models, optional SwiftData persistence and async/await networking, XCTest
+kinds: [ios]
+languages: [swift]
+frameworks: [swiftui, xcodegen]
+
+variables:
+  - key: project_name
+    label: Project name
+    type: string
+    pattern: "^[A-Za-z][A-Za-z0-9 ]*$"
+  - key: bundle_prefix
+    label: Bundle identifier prefix
+    type: string
+    default: com.example
+    pattern: "^[a-z][a-z0-9]*(\\.[a-z][a-z0-9]*)+$"
+
+identity:
+  # Longest first, which the engine already guarantees: "com.template" is
+  # replaced before the "templateapp" leaf inside the same bundle id.
+  - from: "com.template"           # bundle identifier prefix
+    to: "{bundle_prefix}"
+  - from: "TemplateApp"            # project, targets, types, directories
+    to: "{project_name.pascal}"
+  - from: "templateapp"            # bundle id leaf
+    to: "{project_name.flat}"
+  - from: "template-app"           # docs
+    to: "{project_name.kebab}"
+
+features:
+  - key: swiftdata
+    label: SwiftData persistence (iOS 17+)
+    default: true
+    files:
+      - "Sources/TemplateApp/Models/**"
+      - "Sources/TemplateApp/Views/ItemsView.swift"
+      - "Tests/TemplateAppTests/ItemStoreTests.swift"
+
+  - key: networking
+    label: async/await API client
+    default: true
+    files:
+      - "Sources/TemplateApp/Networking/**"
+      - "Sources/TemplateApp/Views/GreetingView.swift"
+      - "Tests/TemplateAppTests/GreetingViewModelTests.swift"
+
+presets:
+  - key: minimal
+    label: Plain SwiftUI — no persistence, no networking
+    features: {swiftdata: false, networking: false}
+
+# No verify block on purpose. ADR-0004 verifies a rendered template inside a
+# Docker container, and an iOS build needs macOS with Xcode — which a Linux
+# container cannot provide. This form is verified by its parent's CI on a
+# macOS runner instead, and `templetry verify` says so rather than pretending.
