@@ -29,6 +29,13 @@ identity:
     to: "{project_name.kebab}"
 
 features:
+  - key: environments
+    label: development / staging / production build configurations (ADR-0018)
+    default: true
+    files:
+      - "Sources/TemplateApp/Config/**"
+      - "Tests/TemplateAppTests/AppEnvironmentTests.swift"
+
   - key: swiftdata
     label: SwiftData persistence (iOS 17+)
     default: true
@@ -47,8 +54,8 @@ features:
 
 presets:
   - key: minimal
-    label: Plain SwiftUI — no persistence, no networking
-    features: {swiftdata: false, networking: false}
+    label: Plain SwiftUI — single configuration, no persistence, no networking
+    features: {environments: false, swiftdata: false, networking: false}
 
 # No verify block on purpose. ADR-0004 verifies a rendered template inside a
 # Docker container, and an iOS build needs macOS with Xcode — which a Linux

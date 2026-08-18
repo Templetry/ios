@@ -10,6 +10,16 @@ options:
     iOS: "17.0"
   createIntermediateGroups: true
 
+# tpl:if environments
+# The three environment profiles (ADR-0018) as Xcode's own mechanism: one
+# build configuration each. Development maps to a debug build, the other two
+# to release, which is what makes staging genuinely production-like.
+configs:
+  Development: debug
+  Staging: release
+  Production: release
+# tpl:endif
+
 settings:
   base:
     # Swift 5 language mode. Moving to 6 turns strict concurrency checking
@@ -17,6 +27,18 @@ settings:
     SWIFT_VERSION: "5.0"
     # No signing identity exists on CI, and a simulator build needs none.
     CODE_SIGNING_ALLOWED: "NO"
+  # tpl:if environments
+  # AppConfig reads these with #if, and raises #error when none is set — so
+  # a configuration that lost its flag fails the build rather than quietly
+  # shipping the wrong profile.
+  configs:
+    Development:
+      SWIFT_ACTIVE_COMPILATION_CONDITIONS: "DEBUG ENV_DEVELOPMENT"
+    Staging:
+      SWIFT_ACTIVE_COMPILATION_CONDITIONS: "ENV_STAGING"
+    Production:
+      SWIFT_ACTIVE_COMPILATION_CONDITIONS: "ENV_PRODUCTION"
+  # tpl:endif
 
 targets:
   TemplateApp:
@@ -51,6 +73,24 @@ schemes:
       targets:
         TemplateApp: all
         TemplateAppTests: [test]
+    # tpl:if environments
+    # Named explicitly: with custom configurations there is no Debug/Release
+    # for Xcode to fall back on.
+    run:
+      config: Development
+    test:
+      config: Development
+      targets:
+        - TemplateAppTests
+    profile:
+      config: Production
+    analyze:
+      config: Development
+    archive:
+      config: Production
+    # tpl:endif
+    # tpl:if !environments
     test:
       targets:
         - TemplateAppTests
+    # tpl:endif

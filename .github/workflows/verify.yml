@@ -65,3 +65,19 @@ jobs:
             -scheme VerifyApp \
             -destination "platform=iOS Simulator,name=$device" \
             -quiet
+
+      - name: Every configuration sets its own environment flag (ADR-0018)
+        if: matrix.name == 'default'
+        working-directory: ${{ runner.temp }}/out
+        run: |
+          # AppConfig raises #error when no ENV_ condition is set, so a
+          # configuration that lost its flag fails to compile here rather
+          # than silently shipping the development profile.
+          for config in Development Staging Production; do
+            echo "── building $config"
+            xcodebuild build \
+              -scheme VerifyApp \
+              -configuration "$config" \
+              -destination 'generic/platform=iOS Simulator' \
+              -quiet
+          done

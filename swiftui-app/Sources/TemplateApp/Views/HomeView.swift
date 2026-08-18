@@ -12,6 +12,17 @@ struct HomeView: View {
                 Text(welcome.message(for: "TemplateApp"))
                     .font(.headline)
                     .multilineTextAlignment(.center)
+                // tpl:if environments
+                // Hidden in production — a badge that is always visible stops
+                // being information.
+                if AppConfig.current != .production {
+                    Text(AppConfig.current.rawValue)
+                        .font(.caption2)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(.quaternary, in: Capsule())
+                }
+                // tpl:endif
                 Text("Edit Views/HomeView.swift to make it yours.")
                     .font(.footnote)
                     .foregroundStyle(.secondary)
